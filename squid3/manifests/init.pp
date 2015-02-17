@@ -1,3 +1,7 @@
+# SOURCE: thias-squid3-0.2.3
+# License: Apache 2.0
+# Source: https://github.com/thias/puppet-squid3
+#
 # Class: squid3
 #
 # Squid 3.x proxy server.

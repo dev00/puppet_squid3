@@ -1,0 +1,74 @@
+# MANAGED BY PUPPET
+
+<% @http_port.each do |line| -%>
+http_port                     <%= line %>
+<% end -%>
+
+
+# Default Patterns
+refresh_pattern ^ftp:           1440    20%     10080
+refresh_pattern ^gopher:        1440    0%      1440
+refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
+refresh_pattern .               0       20%     4320
+# Custom Patterns
+<% @refresh_patterns.each do |line| -%>
+refresh_pattern                <%= line                            %>
+<% end -%>
+
+
+acl localhost src 127.0.0.1/32 ::1
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+acl localnet src 10.0.0.0/8     # RFC 1918 possible internal network
+acl localnet src 172.16.0.0/12  # RFC 1918 possible internal network
+acl localnet src 192.168.0.0/16 # RFC 1918 possible internal network
+
+
+# Default localnet acl
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+# Custom local net
+<% @client_net.each do |line| -%>
+acl localnet src <%= line %>
+<% end -%>
+
+
+# Require Proxy Auth
+acl trusted_users proxy_auth <% @trusted_users.each do |line| -%> <% end -%>
+acl trusted_users proxy_auth REQUIRED
+
+
+# Default Safe Port
+acl Safe_ports port  80        # HTTP 
+# Custom Safe Ports
+<% @safe_port.each do |line| -%>
+acl Safe_ports port <%= line %>
+<% end -%>
+
+
+# Default SSL Port
+acl SSL_ports port 443          # HTTPS
+# Custom SSL Port
+<% @ssl_port.each do |line| -%>
+acl SSL_ports port <%= line %>
+<% end -%>
+
+
+# Default ACL
+acl CONNECT method CONNECT
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+http_access allow localnet trusted_users
+http_access allow localhost
+# Custom ACL
+<% @acl.each do |line| -%>
+acl <%= line %>
+<% end -%>
+
+
+# Deny all
+http_access deny all
+
+
+# Squid Groups
+cache_effective_user <%= @squid_user  %>
+cache_effective_group <%= @squid_group  %>

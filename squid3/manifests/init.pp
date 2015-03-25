@@ -27,6 +27,28 @@
 #       server_persistent_connections => 'off',
 #     }
 #  # Options are in the same order they appear in squid.conf
+
+class squid3 (
+  $http_port             = [ '3128' ]
+  $refresh_patterns      = []
+  $safe_ports            = [ '53    # DNS',
+                             '123   # NTP',
+                            ]
+  $ssl_ports             = [ '' ]  
+  $client_net            = [ '192.168.1.0/24' ]
+  $trusted_users         = [ $squid_user ]
+  $acl                   = [ ]
+
+
+  
+
+)
+
+
+
+
+
+
 class squid3 (
   $http_port            = [ '3128' ],
   $ssl_ports            = [ '443'],

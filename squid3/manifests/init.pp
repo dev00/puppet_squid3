@@ -29,45 +29,36 @@
 #  # Options are in the same order they appear in squid.conf
 
 class squid3 (
-  $http_port             = [ '3128' ]
-  $refresh_patterns      = []
+  $http_port             = [ '3128' ],
+  $refresh_patterns      = [],
   $safe_ports            = [ '53    # DNS',
                              '123   # NTP',
-                            ]
-  $ssl_ports             = [ '' ]  
-  $client_net            = [ '192.168.1.0/24' ]
-  $trusted_users         = [ $squid_user ]
-  $acl                   = [ ]
+                            ],
+  $tls_ports             = [], 
+  $client_net            = [ '192.168.1.0/24' ],
+  $trusted_users         = 'root'
+  $acl                   = [ ],
+  $http_access           = [],
+  $squid_user            = 'root',
+  $squid_group           = 'root',
 
-
+  $client_lifetime            = '1 day',
+  $pconn_timeout              = '1 minute',
+  $request_header_max_size    = '64 KB',
+  $maximum_object_size        = '4 MB',
+  $minimum_object_size        = '2 KB',
+  $authenticate_ttl           = '1 hour',
+  $authenticate_ip_ttl        = '0 seconds',
+  $forwarded_for              = 'off',
+  $ignore_unknown_nameservers = 'on',
+  $icp_port                   = '0',
+  $htcp_port                  = '0',
+)inherits ::squid3::params {
   
-
-)
-
-
-
-
-
-
-class squid3 (
-  $http_port            = [ '3128' ],
-  $ssl_ports            = [ '443'],
-  $refresh_patterns     = [],
-  $acl                  = [],
-  $http_access          = [],
-  $htcp_access          = [],
-  $icp_access           = [],
-  $tcp_outgoing_address = [],
-  $cache_mem            = '256 MB',
-) inherits ::squid3::params {
-
-  $use_template = $template ? {
-    'short' => 'squid3/squid.conf.short.erb',
-    'long'  => 'squid3/squid.conf.long.erb',
-    default => $template,
+  package { 'squid3_package':
+    ensure => installed,
+    name => $package_name, 
   }
-
-  package { 'squid3_package': ensure => installed, name => $package_name }
 
   service { 'squid3_service':
     enable    => true,

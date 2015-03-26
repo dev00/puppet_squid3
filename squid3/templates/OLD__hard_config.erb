@@ -1,0 +1,97 @@
+# MANAGED BY PUPPET
+# ALL CHANGES WILL BE RESET DURING NEXT PUPPET RUN
+
+# Default Listen Port ändern auf was gewünscht ist.
+<% @http_port.each do |line| -%>
+http_port                     <%= line %>
+<% end -%>
+
+<% @refresh_patterns.each do |line| -%>
+refresh_pattern                <%= line                            %>
+<% end -%>
+
+# ******************* ACL *******************
+# Filterliste nach Default-Deny-Prinzip + Authentication:
+# acl name type decission_string
+# deny|allow [!]acl_name [[!]acl_name ...]
+
+acl ErlaubtesClientNetz src 192.168.1.0/24
+acl localhost src 127.0.0.1/32 ::1
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+
+
+# require ProxyAuth
+# acl trusted_users proxy_auth REQUIRED
+
+# user-defined ACLs
+<% @acl.each do |line| -%>
+acl 						  <%= line %>
+<% end -%>
+
+# Nutzerspezifische ACL für http:
+<% @http_access.each do |line| -%>
+http_access                   <%= line %>
+<% end -%>
+
+# Nutzerspezifische ACL für outgoing TCP: 
+<% @tcp_outgoing_address.each do |line| -%>
+tcp_outgoing_address		  <%= line %>
+<% end -%>
+
+# Nutzerspezifische ACL für htcp:
+<% @htcp_access.each do |line| -%>
+htcp_access                  <%= line %>
+<% end -%>
+
+# Nutzerspezifische ACL für icp:
+<% @icp_access.each do |line| -%>
+icp_access                    <%= line %>
+<% end -%>
+
+
+# Zwecks Default-Deny
+# http_access deny CONNECT !https_port
+# http_access deny !http_port  !https_port
+# http_access allow ErlaubtesClientNetz trusted_users
+# http_access deny all
+
+
+acl CONNECT method CONNECT
+
+# Aus der Default config
+# http_access deny !http_port
+# http_access deny !https_port
+# http_access deny CONNECT !SSL_ports
+# http_access allow localhost manager
+# http_access deny manager
+# http_access allow localnet
+# http_access allow localhost
+# http_access deny all
+
+
+# ******************* Cache Settings *******************
+cache_store_log					<%= @cache_store_log                %>
+cache_log                      	<%= @cache_log                      %>
+cache_mem						<%= @cache_mem                      %>
+
+
+# ******************* Authentication *******************
+# NTLM gegen Radius Server??
+auth_param digest             /usr/lib/squid3/ncsa_auth /etc/squid3/i_just_put_here_the_passwd
+auth_param digest             children 5
+auth_param digest             realm Squid proxy-caching web server
+
+#Ein Login gilt nur für die anfragende IP Adresse (keine gleichzeitigen Logins mit gleichen Login-Daten)
+authenticate_ip_ttl           0 seconds
+
+# Entsprechend Req 3.12-8:
+forwarded_for                 off
+
+icp_port 0
+icp_access deny all
+htcp_port 0
+htcp_access deny all
+
+# SNMP deaktivieren:
+snmp_port 0
+snmp_access deny all

@@ -1,97 +1,98 @@
 # MANAGED BY PUPPET
-# ALL CHANGES WILL BE RESET DURING NEXT PUPPET RUN
 
-# Default Listen Port ändern auf was gewünscht ist.
 <% @http_port.each do |line| -%>
 http_port                     <%= line %>
 <% end -%>
 
+
+# Default Patterns
+refresh_pattern ^ftp:           1440    20%     10080
+refresh_pattern ^gopher:        1440    0%      1440
+refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
+refresh_pattern .               0       20%     4320
+# Custom Patterns
 <% @refresh_patterns.each do |line| -%>
-refresh_pattern                <%= line                            %>
+refresh_pattern <%= line                            %>
 <% end -%>
 
-# ******************* ACL *******************
-# Filterliste nach Default-Deny-Prinzip + Authentication:
-# acl name type decission_string
-# deny|allow [!]acl_name [[!]acl_name ...]
 
-acl ErlaubtesClientNetz src 192.168.1.0/24
 acl localhost src 127.0.0.1/32 ::1
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+acl localnet src 10.0.0.0/8     # RFC 1918 possible internal network
+acl localnet src 172.16.0.0/12  # RFC 1918 possible internal network
+acl localnet src 192.168.0.0/16 # RFC 1918 possible internal network
 
 
-# require ProxyAuth
+# Default localnet acl
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+# Custom local net
+<% @client_net.each do |line| -%>
+acl localnet src <%= line %>
+<% end -%>
+
+
+# Require Proxy Auth
+# acl trusted_users proxy_auth <%= @trusted_users %>
 # acl trusted_users proxy_auth REQUIRED
 
-# user-defined ACLs
-<% @acl.each do |line| -%>
-acl 						  <%= line %>
-<% end -%>
 
-# Nutzerspezifische ACL für http:
-<% @http_access.each do |line| -%>
-http_access                   <%= line %>
-<% end -%>
-
-# Nutzerspezifische ACL für outgoing TCP: 
-<% @tcp_outgoing_address.each do |line| -%>
-tcp_outgoing_address		  <%= line %>
-<% end -%>
-
-# Nutzerspezifische ACL für htcp:
-<% @htcp_access.each do |line| -%>
-htcp_access                  <%= line %>
-<% end -%>
-
-# Nutzerspezifische ACL für icp:
-<% @icp_access.each do |line| -%>
-icp_access                    <%= line %>
+# Default Safe Port
+acl Safe_ports port  80        # HTTP 
+# Custom Safe Ports
+<% @safe_ports.each do |line| -%>
+ acl Safe_ports port <%= line %>
 <% end -%>
 
 
-# Zwecks Default-Deny
-# http_access deny CONNECT !https_port
-# http_access deny !http_port  !https_port
-# http_access allow ErlaubtesClientNetz trusted_users
-# http_access deny all
+# Default SSL Port
+acl SSL_ports port 443          # HTTPS
+# Custom TLS Port
+<% @tls_ports.each do |line| -%>
+acl SSL_ports port <%= line %>
+<% end -%>
 
+# icp Port
 
+# Default ACL
 acl CONNECT method CONNECT
+# Custom ACL
+<% @acl.each do |line| -%>
+acl <%= line %>
+<% end -%>
 
-# Aus der Default config
-# http_access deny !http_port
-# http_access deny !https_port
-# http_access deny CONNECT !SSL_ports
-# http_access allow localhost manager
-# http_access deny manager
-# http_access allow localnet
-# http_access allow localhost
-# http_access deny all
+# basic http access
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+http_access allow localhost
+
+# custon http access
+<% @http_access.each do |line| -%>
+http_access <%= line %>
+<% end -%>
+
+# Deny all
+# http_access allow trusted_users
+http_access deny all
 
 
-# ******************* Cache Settings *******************
-cache_store_log					<%= @cache_store_log                %>
-cache_log                      	<%= @cache_log                      %>
-cache_mem						<%= @cache_mem                      %>
+# Squid Groups
+cache_effective_user <%= @squid_user  %>
+cache_effective_group <%= @squid_group  %>
 
 
-# ******************* Authentication *******************
-# NTLM gegen Radius Server??
-auth_param digest             /usr/lib/squid3/ncsa_auth /etc/squid3/i_just_put_here_the_passwd
-auth_param digest             children 5
-auth_param digest             realm Squid proxy-caching web server
+client_lifetime 			<%= @client_lifetime  %>
+pconn_timeout 				<%= @pconn_timeout  %>
+request_header_max_size 	<%= @request_header_max_size  %>
+maximum_object_size			<%= @maximum_object_size  %>
+minimum_object_size 		<%= @minimum_object_size  %>
+authenticate_ttl 			<%= @authenticate_ttl  %>
+authenticate_ip_ttl 		<%= @authenticate_ip_ttl  %>
 
-#Ein Login gilt nur für die anfragende IP Adresse (keine gleichzeitigen Logins mit gleichen Login-Daten)
-authenticate_ip_ttl           0 seconds
 
-# Entsprechend Req 3.12-8:
-forwarded_for                 off
+forwarded_for				<%= @forwarded_for  %>
+ignore_unknown_nameservers 	<%= @ignore_unknown_nameservers  %>
+     
+icp_port					<%= @icp_port  %>
+htcp_port					<%= @htcp_port  %>
 
-icp_port 0
-icp_access deny all
-htcp_port 0
-htcp_access deny all
-
-# SNMP deaktivieren:
-snmp_port 0
-snmp_access deny all

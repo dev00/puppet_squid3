@@ -11,21 +11,21 @@
 #     include squid3
 #
 #     class { 'squid3':
-#		http_port => [	
+#	      http_port => [	
 #						'3128',
 #						'8080'
 #					 ]
-#		safe_ports => [
+#		   safe_ports => [
 #						'70			   	# Gopher',
 #					  ],
-#		tls_ports	=> [
+#		   tls_ports	=> [
 #					   	'22				# SSH',
 #					   ],					  
 #       acl => [
 #         'localnet src 10.0.0.0/8     # RFC 1918 possible internal network',
-#		  'localnet src 172.16.0.0/12  # RFC 1918 possible internal network',	
+#	        'localnet src 172.16.0.0/12  # RFC 1918 possible internal network',	
 #         'localnet src 192.168.0.0/16 # RFC 1918 possible internal network',
-#		  'localnet src fc00::/7       # RFC 4193 local private network range',
+#         'localnet src fc00::/7       # RFC 4193 local private network range',
 #       ],
 #       http_access => [
 #         'allow localnet',

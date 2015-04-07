@@ -18,19 +18,9 @@ refresh_pattern <%= line                            %>
 
 acl localhost src 127.0.0.1/32 ::1
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
-acl localnet src 10.0.0.0/8     # RFC 1918 possible internal network
-acl localnet src 172.16.0.0/12  # RFC 1918 possible internal network
-acl localnet src 192.168.0.0/16 # RFC 1918 possible internal network
-
 
 # Default localnet acl
-acl localnet src fc00::/7       # RFC 4193 local private network range
 acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
-# Custom local net
-<% @client_net.each do |line| -%>
-acl localnet src <%= line %>
-<% end -%>
-
 
 # Require Proxy Auth
 # acl trusted_users proxy_auth <%= @trusted_users %>
@@ -41,7 +31,7 @@ acl localnet src <%= line %>
 acl Safe_ports port  80        # HTTP 
 # Custom Safe Ports
 <% @safe_ports.each do |line| -%>
- acl Safe_ports port <%= line %>
+acl Safe_ports port <%= line %>
 <% end -%>
 
 
@@ -88,7 +78,7 @@ maximum_object_size			<%= @maximum_object_size  %>
 minimum_object_size 		<%= @minimum_object_size  %>
 authenticate_ttl 			<%= @authenticate_ttl  %>
 authenticate_ip_ttl 		<%= @authenticate_ip_ttl  %>
-
+server_persistent_connections <%= @server_persistent_connections  %>
 
 forwarded_for				<%= @forwarded_for  %>
 ignore_unknown_nameservers 	<%= @ignore_unknown_nameservers  %>

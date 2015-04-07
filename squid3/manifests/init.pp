@@ -1,46 +1,50 @@
-# SOURCE: thias-squid3-0.2.3
-# License: Apache 2.0
+# BASED ON: thias-squid3-0.2.3
 # Source: https://github.com/thias/puppet-squid3
+# License: Apache 2.0
+# Source: -> insert source here <-
 #
 # Class: squid3
 #
-# Squid 3.x proxy server.
+# Squid 3.x hardened
 #
 # Sample Usage :
 #     include squid3
 #
 #     class { 'squid3':
+#		http_port => [	
+#						'3128',
+#						'8080'
+#					 ]
+#		safe_ports => [
+#						'70			   	# Gopher',
+#					  ],
+#		tls_ports	=> [
+#					   	'22				# SSH',
+#					   ],					  
 #       acl => [
-#         'de myip 192.168.1.1',
-#         'fr myip 192.168.1.2',
-#         'office src 10.0.0.0/24',
+#         'localnet src 10.0.0.0/8     # RFC 1918 possible internal network',
+#		  'localnet src 172.16.0.0/12  # RFC 1918 possible internal network',	
+#         'localnet src 192.168.0.0/16 # RFC 1918 possible internal network',
+#		  'localnet src fc00::/7       # RFC 4193 local private network range',
 #       ],
 #       http_access => [
-#         'allow office',
-#       ],
-#       cache => [ 'deny all' ],
-#       via => 'off',
-#       tcp_outgoing_address => [
-#         '192.168.1.1 country_de',
-#         '192.168.1.2 country_fr',
+#         'allow localnet',
 #       ],
 #       server_persistent_connections => 'off',
 #     }
-#  # Options are in the same order they appear in squid.conf
-
+# 
 class squid3 (
   $http_port             = [ '3128' ],
   $refresh_patterns      = [],
   $safe_ports            = [ '53    # DNS',
                              '123   # NTP',
                             ],
-  $tls_ports             = [], 
-  $client_net            = [ '192.168.1.0/24' ],
+  $tls_ports             = [],
   $trusted_users         = 'root'
   $acl                   = [ ],
   $http_access           = [],
-  $squid_user            = 'root',
-  $squid_group           = 'root',
+  $squid_user            = 'squid',
+  $squid_group           = 'squid',
 
   $client_lifetime            = '1 day',
   $pconn_timeout              = '1 minute',
@@ -49,6 +53,7 @@ class squid3 (
   $minimum_object_size        = '2 KB',
   $authenticate_ttl           = '1 hour',
   $authenticate_ip_ttl        = '0 seconds',
+  $server_persistent_connections = 'off',
   $forwarded_for              = 'off',
   $ignore_unknown_nameservers = 'on',
   $icp_port                   = '0',
@@ -79,7 +84,7 @@ class squid3 (
   user { 'squid':
     name => 'squid',
     ensure => present,
-    home => '/home/squid',
+    home => '/var/squid',
     managehome => true,
     password => '*',
   }
